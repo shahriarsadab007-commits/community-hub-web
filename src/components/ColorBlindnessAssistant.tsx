@@ -17,18 +17,9 @@ export function ColorBlindnessAssistant() {
   useEffect(() => {
     localStorage.setItem("color-blindness-mode", mode);
 
-    // Apply filter to html element
-    const root = document.documentElement;
-    if (mode === "off") {
-      root.style.filter = "none";
-    } else {
-      root.style.filter = `url(#${mode})`;
-    }
-
-    // Cleanup function not strictly necessary as we want it to persist,
-    // but good practice if component unmounts (though it's in App root).
-    // However, if we navigate away, we might want to keep it?
-    // User requirement: "should be global".
+    // We clean up any potential legacy style on the root element if it exists
+    // from previous implementations or if we switch strategies.
+    document.documentElement.style.filter = "none";
   }, [mode]);
 
   const options = [
@@ -83,11 +74,21 @@ export function ColorBlindnessAssistant() {
         </defs>
       </svg>
 
+      {/* Overlay for simulation */}
+      <div
+        className="fixed inset-0 z-[100] pointer-events-none"
+        style={{
+          backdropFilter: mode === 'off' ? 'none' : `url(#${mode})`,
+          WebkitBackdropFilter: mode === 'off' ? 'none' : `url(#${mode})`,
+        }}
+        aria-hidden="true"
+      />
+
       <Popover>
         <PopoverTrigger asChild>
           <button
             className={cn(
-              "fixed bottom-44 right-4 md:bottom-28 md:right-8 z-50",
+              "fixed bottom-44 right-4 md:bottom-28 md:right-8 z-[101]",
               "w-14 h-14 rounded-full",
               "bg-primary text-primary-foreground",
               "shadow-lg hover:shadow-xl",
@@ -102,7 +103,7 @@ export function ColorBlindnessAssistant() {
             <Eye className="w-6 h-6" />
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-80 p-4" align="end" side="left">
+        <PopoverContent className="w-80 p-4 z-[101]" align="end" side="left">
             <div className="grid grid-cols-2 gap-3">
               {options.map((option) => (
                 <button
